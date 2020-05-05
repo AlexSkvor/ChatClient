@@ -1,8 +1,30 @@
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.layout.GridPane?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.Label?>
+<?xml version="1.0" encoding="UTF-8"?>
 
-<GridPane fx:controller="org.example.Controller"
-          xmlns:fx="http://javafx.com/fxml" alignment="center" hgap="10" vgap="10">
-</GridPane>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.Pane?>
+
+<Pane maxHeight="650.0" maxWidth="890" minHeight="640.0" minWidth="890.0" xmlns="http://javafx.com/javafx/11.0.1"
+      xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.example.Controller">
+
+
+    <children>
+
+        <ListView fx:id="chatsList" layoutX="15.0" layoutY="15.0" prefHeight="520.0" prefWidth="200.0"/>
+        <ListView fx:id="chatMessagesList" layoutX="225.0" layoutY="15.0" prefHeight="520.0" prefWidth="350.0"/>
+        <ListView fx:id="usersInChatList" layoutX="600.0" layoutY="15.0" prefHeight="520.0" prefWidth="280.0"/>
+        <TextField fx:id="editTextChatLogin" layoutX="600.0" layoutY="550.0" promptText="Введите Ваше имя"/>
+        <TextField fx:id="editTextServerAddress" layoutX="600.0" layoutY="590.0" promptText="Введите адрес сервера"/>
+        <Button layoutX="780.0" layoutY="570.0" mnemonicParsing="false" onAction="#tryConnect" text="Подключиться"/>
+        <TextArea fx:id="messageText" layoutX="233.0" layoutY="548.0" prefHeight="68.0" prefWidth="252.0"/>
+        <Button layoutX="500.0" layoutY="570.0" mnemonicParsing="false" onAction="#sendMessage" text="Отправить"/>
+        <Button layoutX="15.0" layoutY="550.0" mnemonicParsing="false" onAction="#createChat" text="Создать"/>
+        <TextField fx:id="newChatNameField" layoutX="84.0" layoutY="550.0" prefHeight="25.0" prefWidth="128.0"
+                   promptText="Название чата"/>
+        <Button layoutX="14.0" layoutY="590.0" mnemonicParsing="false" onAction="#leaveChat"
+                text="Покинуть текущий чат"/>
+
+    </children>
+</Pane>

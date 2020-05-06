@@ -16,5 +16,4 @@ sealed class PartialState(private val log: String) {
     object Finish : PartialState("Finish")
 
     override fun toString(): String = log
-    fun partial() = this
 }

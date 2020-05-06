@@ -3,8 +3,6 @@ package org.example.connections
 import com.jakewharton.rxrelay2.PublishRelay
 import io.reactivex.Observable
 import org.example.alsoPrintDebug
-import java.io.ObjectInputStream
-import java.io.ObjectOutputStream
 import java.net.Socket
 import java.time.LocalDateTime
 
@@ -17,7 +15,6 @@ class Service(private val socket: Socket) : Thread() {
     var alive: Boolean = true
 
     private val sendList: MutableList<UserAction> = mutableListOf()
-
     private val receivedMessages: MutableList<Intention> = mutableListOf()
 
     init {
@@ -25,13 +22,9 @@ class Service(private val socket: Socket) : Thread() {
     }
 
     private val finishRelay = PublishRelay.create<Unit>()
-
     fun finish(): Observable<Unit> = finishRelay.hide().share()
 
-    //private val readerThread by lazy { ReaderThread() }
-
     private lateinit var readerThread: ReaderThread
-
 
     override fun run() {
         try {
@@ -43,24 +36,28 @@ class Service(private val socket: Socket) : Thread() {
                     alive = false
                     break
                 }
-                sendAllUserActions()
+                getAllTasks().forEach { server.output.writeObject(it) }
                 sleep(100)
             }
         } catch (e: Throwable) {
             alive = false
             e.printStackTrace()
-            System.err.println("server left with error!")
+            System.err.println("connection lost")
         } finally {
-            alsoPrintDebug("finally Service")
-            try {
-                finishRelay.accept(Unit)
-                server.input.close()
-                server.output.close()
-                server.socket.close()
-            } catch (e: Throwable) {
-                e.printStackTrace()
-                println("Could not close resources!")
-            }
+            finishWork()
+        }
+    }
+
+    private fun finishWork(){
+        alsoPrintDebug("closing connection")
+        try {
+            finishRelay.accept(Unit)
+            server.output.close()
+            server.input.close()
+            server.socket.close()
+        } catch (e: Throwable) {
+            e.printStackTrace()
+            println("Could not close resources!")
         }
     }
 
@@ -85,11 +82,6 @@ class Service(private val socket: Socket) : Thread() {
         return res
     }
 
-    private fun sendAllUserActions() {
-        val tasks = getAllTasks()
-        tasks.forEach { server.output.writeObject(it) }
-    }
-
     @Synchronized
     private fun receiveMessage(task: Intention) {
         receivedMessages.add(task)
@@ -100,7 +92,6 @@ class Service(private val socket: Socket) : Thread() {
             try {
                 while (alive) {
                     val action = server.input.readObject()
-                    action.alsoPrintDebug("AAAAAAAAAAAAAAAAAAAAA")
                     if (action !is Intention) continue
                     if (action is Intention.Ping) {
                         lastPingFromServer = LocalDateTime.now()
@@ -112,33 +103,8 @@ class Service(private val socket: Socket) : Thread() {
                 alive = false
                 e.printStackTrace()
             } finally {
-                try {
-                    finishRelay.accept(Unit)
-                    server.input.close()
-                    server.output.close()
-                    server.socket.close()
-                } catch (e: Throwable) {
-                    e.printStackTrace()
-                    println("Could not close resources!")
-                }
+                finishWork()
             }
-        }
-    }
-
-    private class Server(s: Socket) {
-
-        val socket: Socket = s
-        val input: ObjectInputStream
-        val output: ObjectOutputStream
-
-        init {
-            alsoPrintDebug("1")
-            output = ObjectOutputStream(socket.getOutputStream())
-            alsoPrintDebug("2")
-            output.flush()
-            alsoPrintDebug("3")
-            input = ObjectInputStream(socket.getInputStream())
-            alsoPrintDebug("4")
         }
     }
 }

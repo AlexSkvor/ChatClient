@@ -13,7 +13,6 @@ import org.example.connections.Service
 import org.example.connections.User
 import org.example.connections.UserAction
 import org.example.doNothing
-import org.example.observeOnFx
 import org.example.subscribeOnIo
 import java.net.Socket
 import java.util.concurrent.TimeUnit
@@ -23,6 +22,7 @@ class Repository {
     private lateinit var service: Service
 
     fun login(name: String, ip: String, port: Int): Observable<User> {
+        @Suppress("BlockingMethodInNonBlockingContext")
         service = Service(Socket(ip, port))
         observeServiceChanges()
         return getId(name)
@@ -52,7 +52,7 @@ class Repository {
             .subscribeOnIo()
             .subscribe({ _ ->
                 service.getAllReceivedMessages().forEach {
-                    it.alsoPrintDebug("Server send")
+                    it.alsoPrintDebug("Received from server")
                     when (it) {
                         is Intention.Chat -> chatIntentionRelay.accept(it)
                         is Intention.ChatClosed -> chatClosedIntentionRelay.accept(it)
@@ -63,9 +63,7 @@ class Repository {
                         Intention.Ping -> doNothing()
                     }
                 }
-            }, {
-                it.printStackTrace()
-            })
+            }, { it.printStackTrace() })
             .bind()
     }
 

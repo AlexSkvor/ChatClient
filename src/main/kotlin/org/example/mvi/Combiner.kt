@@ -4,7 +4,6 @@ import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import io.reactivex.functions.BiFunction
-import org.example.alsoPrintDebug
 import org.example.connections.Intention
 import org.example.connections.User
 import org.example.connections.UserAction
@@ -22,7 +21,6 @@ class Combiner(
         return Observable.merge(producerActions, serverActions).scan(State(), reducer)
             .distinctUntilChanged()
             .doOnNext { lastState = it }
-
     }
 
     private val reducer = BiFunction { oldState: State, it: PartialState ->
@@ -117,38 +115,36 @@ class Combiner(
     }
 
     private fun subscribeProducerIntentions(producer: IntentionsProducer): Observable<PartialState> {
-        val logInIntent = producer.getLoginIntent()
-            .switchMap { repository.login(it.name, it.ip, it.port) }
-            .map { PartialState.LoggedIn(it.uuid).alsoPrintDebug("AAAAAAAAAAA") }
 
-        producer.createChatIntent()
-            .map { UserAction.CreateChat(it) }
+        fun Observable<out UserAction>.subscribeCommand() = this
             .flatMapCompletable { repository.pushCommand(it) }
             .subscribe({}, { it.printStackTrace() })
             .bind()
+
+        producer.createChatIntent()
+            .map { UserAction.CreateChat(it) }
+            .subscribeCommand()
 
         producer.joinUserIntent()
             .filter { ::lastState.isInitialized }
             .map { id ->
                 UserAction.JoinUser(chatId = lastState.currentChatId,
                     user = lastState.allUsers.first { it.uuid == id })
-            }.flatMapCompletable { repository.pushCommand(it) }
-            .subscribe({}, { it.printStackTrace() })
-            .bind()
+            }.subscribeCommand()
 
         producer.leaveChatIntent()
             .filter { ::lastState.isInitialized && lastState.currentChatId.isNotEmpty() }
             .map { UserAction.LeaveChat(lastState.currentChatId) }
-            .flatMapCompletable { repository.pushCommand(it) }
-            .subscribe({}, { it.printStackTrace() })
-            .bind()
+            .subscribeCommand()
 
         producer.sendMessageIntent()
             .filter { ::lastState.isInitialized }
             .map { UserAction.Message(chatId = lastState.currentChatId, message = it) }
-            .flatMapCompletable { repository.pushCommand(it) }
-            .subscribe({}, { it.printStackTrace() })
-            .bind()
+            .subscribeCommand()
+
+        val logInIntent = producer.getLoginIntent()
+            .switchMap { repository.login(it.name, it.ip, it.port) }
+            .map { PartialState.LoggedIn(it.uuid) }
 
         val openChatIntent = producer.openChatIntent()
             .map { PartialState.OpenChatIntent(it) }
@@ -156,12 +152,13 @@ class Combiner(
         return Observable.merge(logInIntent, openChatIntent)
     }
 
-
     private val disposable = CompositeDisposable()
     fun clear() {
         disposable.clear()
         repository.clear()
     }
 
-    private fun Disposable.bind() = disposable.add(this)
+    private fun Disposable.bind() {
+        disposable.add(this)
+    }
 }

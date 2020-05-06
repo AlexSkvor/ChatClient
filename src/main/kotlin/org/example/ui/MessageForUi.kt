@@ -9,11 +9,11 @@ data class MessageForUi(
     val userName: String,
     val time: LocalDateTime
 ) {
-    override fun toString(): String = "$text\n$userName\t$strDate"
+    override fun toString(): String = "$text\n$userName\t\t$strDate"
 
     private val strDate: String
         get() = timeFormatter.format(time)
-    private val timeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("dd:MM HH:mm:ss")
+    private val timeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM HH:mm:ss")
 
 }
 

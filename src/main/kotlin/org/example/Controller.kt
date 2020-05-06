@@ -138,7 +138,7 @@ class Controller : IntentionsProducer {
     }
 
     private fun nameIsEmpty() {
-        alsoPrintDebug("user name is empty!")
+        alsoPrintDebug("User name is empty!")
     }
 
     private fun Disposable.bind() {

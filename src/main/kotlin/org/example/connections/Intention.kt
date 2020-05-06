@@ -1,14 +1,11 @@
 package org.example.connections
 
-import org.example.formatter
 import java.io.Serializable
 import java.time.LocalDateTime
-import java.util.*
 
 //сообщения, отправляемые сервером пользователю!
 sealed class Intention(
-    var time: LocalDateTime = LocalDateTime.now(),
-    private val uuid: String = UUID.randomUUID().toString()
+    var time: LocalDateTime = LocalDateTime.now()
 ) : Serializable {
 
     data class Chat(
@@ -36,7 +33,4 @@ sealed class Intention(
     ) : Intention()
 
     data class YourId(val userId: String): Intention()
-
-    val strDate: String
-        get() = formatter.format(time)
 }
